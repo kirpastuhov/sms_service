@@ -6,7 +6,7 @@ from loguru import logger
 
 asks.init(trio)
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv() 
 
 
 @click.command()
@@ -17,7 +17,13 @@ load_dotenv()  # take environment variables from .env.
 @click.option("--valid_for", envvar="VALID_FOR")
 async def main(login: str, password: str, phones_list: list[str], message: str, valid_for: int):
     logger.debug(f"Sending {message} to {phones_list}")
-    await asks.post(f"https://smsc.ru/sys/send.php?login={login}&psw={password}&phones={phones_list}&mes={message}&valid={valid_for}")
+    response = await asks.post(f"https://smsc.ru/sys/send.php?login={login}&psw={password}&phones={phones_list}&mes={message}&valid={valid_for}&fmt=3")
+
+    print(f"SMS Was sent. Status: ")
+
+    sms_id = response.json().get("id", 0)
+    status = await asks.post(f"https://smsc.ru/sys/status.php?login={login}&psw={password}&phone={phones_list}&id={sms_id}&fmt=3")
+    print(status.json())
 
 
 if __name__ == "__main__":
