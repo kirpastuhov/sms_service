@@ -6,7 +6,7 @@ import trio
 from dotenv import load_dotenv
 from loguru import logger
 
-from exceptions import SmscApiError
+from src.exceptions import SmscApiError
 
 
 @click.command()
