@@ -13,7 +13,7 @@ from redis import asyncio as aioredis
 from trio_asyncio import aio_as_trio
 
 from db import Database
-from schemas import Message
+from schemas import Mailing, Message
 
 app = QuartTrio(__name__)
 
@@ -64,69 +64,36 @@ async def send():
 
 @app.websocket("/ws")
 async def ws():
-    total = 347
-
     while True:
-        for i in range(total):
-            await websocket.send_json(
-                {
-                    "msgType": "SMSMailingStatus",
-                    "SMSMailings": [
-                        {
-                            "timestamp": 1123131392.734,
-                            "SMSText": "Сегодня гроза! Будьте осторожны!",
-                            "mailingId": "1",
-                            "totalSMSAmount": total,
-                            "deliveredSMSAmount": i,
-                            "failedSMSAmount": 5,
-                        },
-                        {
-                            "timestamp": 1323141112.924422,
-                            "SMSText": "Новогодняя акция!!! Приходи в магазин и получи скидку!!!",
-                            "mailingId": "new-year",
-                            "totalSMSAmount": 3993,
-                            "deliveredSMSAmount": 801,
-                            "failedSMSAmount": 0,
-                        },
-                    ],
-                }
-            )
-            await trio.sleep(0.3)
-        await trio.sleep(3)
+        await trio.sleep(0.5)
+        sms_ids = await aio_as_trio(app.db.list_sms_mailings())
+        mailings = await aio_as_trio(app.db.get_sms_mailings(*sms_ids))
+        mailings = [
+            Mailing(
+                timestamp=sms["created_at"],
+                SMSText=sms["text"],
+                mailingId=sms["sms_id"],
+                totalSMSAmount=sms["phones_count"],
+                deliveredSMSAmount=2,
+                failedSMSAmount=1,
+            ).model_dump()
+            for sms in mailings
+        ]
+
+        await websocket.send_json(
+            {"msgType": "SMSMailingStatus", "SMSMailings": mailings}
+        )
 
 
 @app.before_serving
 async def create_db_pool():
-    # app.db_pool = await ...
     app.redis = aioredis.from_url("redis://localhost", decode_responses=True)
     app.db = Database(app.redis)
 
 
-# @app.before_serving
-# async def use_g():
-#     g.something.do_something()
-
-
-# @app.while_serving
-# async def lifespan():
-#     ...  # startup
-#     yield
-#     ...  # shutdown
-
-
-# @app.route("/")
-# async def index():
-#     app.db_pool.execute(...)
-#     # g.something is not available here
-
-
 @app.after_serving
 async def create_db_pool():
-    # await app.db_pool.close()
     await app.redis.close()
-
-
-# app.run()
 
 
 async def run_server():
@@ -135,8 +102,6 @@ async def run_server():
         config.bind = [f"127.0.0.1:5000"]
         config.use_reloader = True
 
-        # здесь живёт остальной код инициализации
-        # ...
         await serve(app, config)
 
 

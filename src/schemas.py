@@ -10,3 +10,19 @@ class Message(BaseModel):
         if isinstance(v, str):
             v = v.replace("text=", "").replace("+", " ")
         return v
+
+
+class Mailing(BaseModel):
+    timestamp: float
+    SMSText: constr(min_length=1)
+    mailingId: str
+    totalSMSAmount: int
+    deliveredSMSAmount: int
+    failedSMSAmount: int
+
+    @field_validator("mailingId", mode="before")
+    @classmethod
+    def validate_mailing_id(cls, v):
+        if isinstance(v, int):
+            v = str(v)
+        return v
