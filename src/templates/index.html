@@ -27,7 +27,7 @@
           <fieldset>
             <div class="form-row align-items-center">
               <div class="col">
-                <input type="text" class="form-control mb-2" name="text" required="required" placeholder="Текст сообщения">
+                <input type="text" class="form-control mb-2" name="text"  placeholder="Текст сообщения">
               </div>
               <div class="col-auto">
                 <button type="submit" class="btn btn-primary mb-2">Отправить
@@ -56,7 +56,7 @@
             {{mailing.date}}
           </p>
         </div>
-        <div class="col-9">
+        <div class="col-9" style="max-width: 70%;">
           <div class="progress mt-1" style="height: 20px;">
 
             <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" :aria-valuenow="mailing.percentFulfilled" aria-valuemin="0" aria-valuemax="100" v-bind:style="{width:mailing.percentFulfilled+'%'}">{{mailing.percentFulfilled + '%'}}</div>
